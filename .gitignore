@@ -1,0 +1,21 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## SQLite DB
+*.db
+*.db-shm
+*.db-wal
+
+## Logs
+logs/
+
+## macOS
+.DS_Store
+
+## Env
+.env
+appsettings.Development.json

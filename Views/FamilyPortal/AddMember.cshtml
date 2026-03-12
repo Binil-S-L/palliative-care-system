@@ -1,0 +1,90 @@
+@model PalliativeCare.Models.FamilyMember
+@{
+    ViewData["Title"] = "Add Family / Carer";
+    var patient = ViewBag.Patient as PalliativeCare.Models.Patient;
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="Manage" asp-route-patientId="@patient!.Id" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0 fw-bold">Add Family / Carer</h5>
+        <small class="text-muted">For: @patient.FullName</small>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="alert alert-info border-0 mb-3">
+            <i class="fas fa-info-circle me-2"></i>
+            After adding, you must <strong>approve</strong> their access before they can view the family portal.
+        </div>
+        <form asp-action="AddMember" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="PatientId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="card">
+                <div class="card-header"><i class="fas fa-user-friends me-2 text-primary"></i>Family Member Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label fw-semibold small"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label fw-semibold small"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Relationship" class="form-label fw-semibold small"></label>
+                            <select asp-for="Relationship" class="form-select" required>
+                                <option value="">Select...</option>
+                                <option>Spouse / Partner</option>
+                                <option>Parent</option>
+                                <option>Child</option>
+                                <option>Sibling</option>
+                                <option>Grandchild</option>
+                                <option>Friend</option>
+                                <option>Primary Carer</option>
+                                <option>Legal Guardian</option>
+                                <option>Other</option>
+                            </select>
+                            <span asp-validation-for="Relationship" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label fw-semibold small"></label>
+                            <input asp-for="Phone" class="form-control" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Email" class="form-label fw-semibold small">Email (used for portal login)</label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input asp-for="CanViewRecords" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="CanViewRecords" class="form-check-label small">Can view care updates</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input asp-for="CanMessage" class="form-check-input" type="checkbox" checked />
+                                <label asp-for="CanMessage" class="form-check-label small">Can send messages to care team</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex gap-2 justify-content-end">
+                            <a asp-action="Manage" asp-route-patientId="@patient.Id" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-user-plus me-2"></i>Add Family Member
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

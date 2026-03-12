@@ -1,0 +1,30 @@
+@model PalliativeCare.Models.MedicalRecord
+@{ ViewData["Title"] = "Medical Record"; }
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i></a>
+    <h5 class="mb-0 fw-bold">Medical Record — @Model.Patient?.FullName</h5>
+</div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card"><div class="card-body">
+            <dl class="row mb-0 small">
+                <dt class="col-5 text-muted">Patient</dt><dd class="col-7 fw-semibold"><a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="text-decoration-none">@Model.Patient?.FullName</a></dd>
+                <dt class="col-5 text-muted">Clinician</dt><dd class="col-7">@Model.Doctor?.FullName</dd>
+                <dt class="col-5 text-muted">Date</dt><dd class="col-7">@Model.RecordDate.ToString("dd MMM yyyy HH:mm")</dd>
+                <dt class="col-5 text-muted">Type</dt><dd class="col-7"><span class="badge bg-primary bg-opacity-10 text-primary">@Model.Type</span></dd>
+                <dt class="col-5 text-muted">Pain Score</dt><dd class="col-7">@(Model.PainScore != null ? $"{Model.PainScore}/10" : "Not recorded")</dd>
+            </dl>
+        </div></div>
+    </div>
+    <div class="col-md-8">
+        <div class="card"><div class="card-body">
+            <h6 class="fw-bold text-danger mb-2">Chief Complaint</h6>
+            <p>@Model.ChiefComplaint</p>
+            @if (Model.VitalSigns != null) { <h6 class="fw-bold small text-muted mt-3">VITAL SIGNS</h6><p class="small">@Model.VitalSigns</p> }
+            @if (Model.Assessment != null) { <h6 class="fw-bold small text-muted mt-3">ASSESSMENT</h6><p class="small">@Model.Assessment</p> }
+            @if (Model.TreatmentPlan != null) { <h6 class="fw-bold small text-muted mt-3">TREATMENT PLAN</h6><p class="small">@Model.TreatmentPlan</p> }
+            @if (Model.Medications != null) { <h6 class="fw-bold small text-muted mt-3">MEDICATIONS</h6><p class="small">@Model.Medications</p> }
+            @if (Model.FollowUpNotes != null) { <h6 class="fw-bold small text-muted mt-3">FOLLOW-UP</h6><p class="small">@Model.FollowUpNotes</p> }
+        </div></div>
+    </div>
+</div>

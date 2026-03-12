@@ -1,0 +1,148 @@
+@* ────────────────────────────────────────────────────────────────────────────
+   Family Portal view — what an approved family member sees after logging in.
+   Separate, clean layout — not using the staff sidebar.
+─────────────────────────────────────────────────────────────────────────── *@
+@{
+    Layout = null;
+    var patient  = ViewBag.Patient as PalliativeCare.Models.Patient;
+    var member   = ViewBag.Member  as PalliativeCare.Models.FamilyMember;
+    var updates  = ViewBag.Updates  as IEnumerable<PalliativeCare.Models.CareUpdate>  ?? Enumerable.Empty<PalliativeCare.Models.CareUpdate>();
+    var messages = ViewBag.Messages as IEnumerable<PalliativeCare.Models.FamilyMessage> ?? Enumerable.Empty<PalliativeCare.Models.FamilyMessage>();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Care Updates — @patient!.FirstName</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        .portal-header { background: linear-gradient(135deg, #1a5276, #2980b9); color: white; padding: 24px; }
+        .card { border: none; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .update-card { border-left: 4px solid #1abc9c; }
+        .msg-team   { background: #1a5276; color: white; border-radius: 16px 16px 4px 16px; }
+        .msg-family { background: #fff; border-radius: 16px 16px 16px 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="portal-header mb-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-heartbeat me-2 text-danger"></i>Family Care Portal</h4>
+                <div class="opacity-75">Updates for <strong>@patient.FirstName @patient.LastName</strong></div>
+            </div>
+            <div class="text-end opacity-75 small">
+                <div>Signed in as</div>
+                <strong>@member!.FullName</strong> (@member.Relationship)
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+
+        @* ── Care Updates ────────────────────────────────────────────────── *@
+        <div class="col-lg-7">
+            <h6 class="text-muted text-uppercase fw-bold mb-3" style="letter-spacing:.08em">
+                <i class="fas fa-bullhorn me-2"></i>Care Team Updates
+            </h6>
+            @if (!updates.Any())
+            {
+                <div class="card p-4 text-center text-muted">
+                    <i class="fas fa-inbox fa-2x d-block mb-2 opacity-25"></i>
+                    No updates have been posted yet. The care team will post news here.
+                </div>
+            }
+            @foreach (var u in updates)
+            {
+                <div class="card update-card mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong>@u.Title</strong>
+                        <small class="text-muted">@u.PostedAt.ToString("dd MMM yyyy")</small>
+                    </div>
+                    <div class="text-muted small mb-1">
+                        <i class="fas fa-user-md me-1"></i>@(u.Doctor?.FullName ?? "Care Team")
+                    </div>
+                    <p class="mb-0">@u.Body</p>
+                </div>
+            }
+        </div>
+
+        @* ── Messaging ───────────────────────────────────────────────────── *@
+        <div class="col-lg-5">
+            <h6 class="text-muted text-uppercase fw-bold mb-3" style="letter-spacing:.08em">
+                <i class="fas fa-comments me-2"></i>Message the Care Team
+            </h6>
+            <div class="card p-3 mb-3">
+                <div class="d-flex flex-column gap-2 mb-3" style="max-height:360px;overflow-y:auto" id="msgThread">
+                    @if (!messages.Any())
+                    {
+                        <div class="text-center text-muted py-3 small">No messages yet. Send the team a message below.</div>
+                    }
+                    @foreach (var msg in messages)
+                    {
+                        var isTeam = msg.Direction == PalliativeCare.Models.MessageDirection.TeamToFamily;
+                        <div class="d-flex @(isTeam ? "justify-content-start" : "justify-content-end")">
+                            <div class="p-3 @(isTeam ? "msg-team" : "msg-family")" style="max-width:85%;font-size:0.88rem">
+                                <div class="fw-semibold mb-1" style="font-size:0.75rem;opacity:0.75">
+                                    @(isTeam ? (msg.Doctor?.FullName ?? "Care Team") : "You")
+                                    · @msg.SentAt.ToString("HH:mm dd MMM")
+                                </div>
+                                @msg.Body
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <form asp-action="SendMessage" asp-controller="FamilyPortal" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="patientId"      value="@patient.Id" />
+                    <input type="hidden" name="familyMemberId" value="@member.Id" />
+                    <div class="input-group">
+                        <textarea name="body" class="form-control" rows="2"
+                            placeholder="Type a message..." required style="resize:none"></textarea>
+                        <button type="submit" class="btn btn-primary px-3">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            @* Patient care team contacts *@
+            <div class="card p-3">
+                <div class="fw-semibold mb-2 small text-muted text-uppercase" style="letter-spacing:.06em">
+                    <i class="fas fa-phone me-1"></i>Care Team Contact
+                </div>
+                @if (patient.Doctor != null)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:40px;height:40px">
+                            @patient.Doctor.FirstName[0]@patient.Doctor.LastName[0]
+                        </div>
+                        <div>
+                            <div class="fw-semibold">@patient.Doctor.FullName</div>
+                            <div class="text-muted small">Lead clinician · @patient.Doctor.Phone</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted small">Contact your hospital for the care team number.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+    const t = document.getElementById('msgThread');
+    if (t) t.scrollTop = t.scrollHeight;
+</script>
+</body>
+</html>

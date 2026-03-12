@@ -1,0 +1,48 @@
+@model IEnumerable<PalliativeCare.Models.Doctor>
+@{ ViewData["Title"] = "Doctors & Staff"; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div><h5 class="mb-0 fw-bold">Doctors & Staff</h5><small class="text-muted">@Model.Count() team members</small></div>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-user-plus me-2"></i>Add Staff</a>
+</div>
+
+<div class="row g-3">
+@foreach (var d in Model)
+{
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold" style="width:48px;height:48px;font-size:1rem">
+                        @d.FirstName[0]@d.LastName[0]
+                    </div>
+                    <div>
+                        <div class="fw-bold">@d.FullName</div>
+                        <div class="text-muted small">@d.Specialisation</div>
+                    </div>
+                </div>
+                <div class="row g-1 small text-muted mb-3">
+                    <div class="col-12"><i class="fas fa-tag me-1"></i>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">@d.Role</span>
+                    </div>
+                    <div class="col-12"><i class="fas fa-phone me-1"></i>@d.Phone</div>
+                    <div class="col-12"><i class="fas fa-envelope me-1"></i>@d.Email</div>
+                    @if (d.LicenceNumber != null) { <div class="col-12"><i class="fas fa-id-card me-1"></i>@d.LicenceNumber</div> }
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge @(d.IsAvailable ? "bg-success" : "bg-secondary") bg-opacity-15 text-dark">
+                        @(d.IsAvailable ? "Available" : "Unavailable")
+                    </span>
+                    <div class="d-flex gap-1">
+                        <a asp-action="Edit" asp-route-id="@d.Id" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                        <form asp-action="Delete" asp-route-id="@d.Id" method="post" onsubmit="return confirm('Remove this staff member?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+</div>

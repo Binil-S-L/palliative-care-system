@@ -1,0 +1,203 @@
+@model PalliativeCare.Models.Patient
+@{ ViewData["Title"] = Model.FullName; }
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold fs-4" style="width:56px;height:56px">
+            @Model.FirstName[0]@Model.LastName[0]
+        </div>
+        <div>
+            <h5 class="mb-0 fw-bold">@Model.FullName</h5>
+            <span class="text-muted small">@Model.Age years · @Model.Gender · Registered @Model.RegisteredAt.ToString("dd MMM yyyy")</span>
+        </div>
+        @{
+            var sc = Model.Status switch {
+                PalliativeCare.Models.PatientStatus.Active     => "badge-active",
+                PalliativeCare.Models.PatientStatus.Inactive   => "badge-inactive",
+                PalliativeCare.Models.PatientStatus.Discharged => "badge-discharged",
+                PalliativeCare.Models.PatientStatus.Deceased   => "badge-deceased",
+                _ => "bg-secondary"
+            };
+        }
+        <span class="badge @sc px-3 py-2">@Model.Status</span>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+            <i class="fas fa-edit me-1"></i>Edit
+        </a>
+        <a asp-controller="Appointment" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-primary">
+            <i class="fas fa-calendar-plus me-1"></i>Schedule
+        </a>
+        <a asp-controller="MedicalRecord" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-success">
+            <i class="fas fa-notes-medical me-1"></i>New Record
+        </a>
+        <a asp-controller="Pps" asp-action="PatientHistory" asp-route-patientId="@Model.Id" class="btn btn-outline-dark">
+            <i class="fas fa-chart-line me-1"></i>PPS
+        </a>
+        <a asp-controller="FamilyPortal" asp-action="Manage" asp-route-patientId="@Model.Id" class="btn btn-outline-info">
+            <i class="fas fa-users me-1"></i>Family Portal
+        </a>
+        <a asp-controller="Reminder" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-outline-danger">
+            <i class="fas fa-bell me-1"></i>Reminder
+        </a>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="patientTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#profile">Profile</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#appointments">Appointments (@Model.Appointments.Count)</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#records">Medical Records (@Model.MedicalRecords.Count)</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#reminders">Reminders (@Model.Reminders.Count)</a></li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- PROFILE TAB -->
+    <div class="tab-pane fade show active" id="profile">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-user me-2 text-primary"></i>Personal Information</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5 text-muted small">Date of Birth</dt><dd class="col-sm-7">@Model.DateOfBirth.ToString("dd MMM yyyy")</dd>
+                            <dt class="col-sm-5 text-muted small">Phone</dt><dd class="col-sm-7">@Model.Phone</dd>
+                            <dt class="col-sm-5 text-muted small">Email</dt><dd class="col-sm-7">@(Model.Email ?? "—")</dd>
+                            <dt class="col-sm-5 text-muted small">Address</dt><dd class="col-sm-7">@Model.Address</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><i class="fas fa-stethoscope me-2 text-danger"></i>Medical Information</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5 text-muted small">Diagnosis</dt><dd class="col-sm-7 fw-semibold text-danger">@Model.Diagnosis</dd>
+                            <dt class="col-sm-5 text-muted small">Assigned Doctor</dt><dd class="col-sm-7">@(Model.Doctor?.FullName ?? "Unassigned")</dd>
+                            <dt class="col-sm-5 text-muted small">Allergies / Meds</dt><dd class="col-sm-7">@(Model.AllergiesAndMedications ?? "None recorded")</dd>
+                            <dt class="col-sm-5 text-muted small">Notes</dt><dd class="col-sm-7">@(Model.Notes ?? "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            @if (Model.EmergencyContactName != null)
+            {
+                <div class="col-12">
+                    <div class="card border-danger border-opacity-25">
+                        <div class="card-header text-danger"><i class="fas fa-phone-alt me-2"></i>Emergency Contact</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4"><strong>@Model.EmergencyContactName</strong> (@Model.EmergencyContactRelation)</div>
+                                <div class="col-md-4"><i class="fas fa-phone me-1 text-muted"></i>@Model.EmergencyContactPhone</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- APPOINTMENTS TAB -->
+    <div class="tab-pane fade" id="appointments">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>Appointment History</span>
+                <a asp-controller="Appointment" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-primary"><i class="fas fa-plus me-1"></i>Schedule</a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Appointments.Any())
+                {
+                    <div class="text-center py-4 text-muted">No appointments yet.</div>
+                }
+                else
+                {
+                    <table class="table mb-0">
+                        <thead><tr><th>Date & Time</th><th>Doctor</th><th>Purpose</th><th>Type</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @foreach (var a in Model.Appointments.OrderByDescending(x => x.ScheduledAt))
+                        {
+                            <tr>
+                                <td>@a.ScheduledAt.ToString("dd MMM yyyy HH:mm")</td>
+                                <td>@a.Doctor?.FullName</td>
+                                <td>@a.Purpose</td>
+                                <td><span class="badge bg-info bg-opacity-15 text-info">@a.Type</span></td>
+                                <td><span class="badge bg-secondary bg-opacity-15 text-dark">@a.Status</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- MEDICAL RECORDS TAB -->
+    <div class="tab-pane fade" id="records">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>Medical Records</span>
+                <a asp-controller="MedicalRecord" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-success"><i class="fas fa-plus me-1"></i>New Record</a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.MedicalRecords.Any())
+                {
+                    <div class="text-center py-4 text-muted">No records yet.</div>
+                }
+                else
+                {
+                    @foreach (var r in Model.MedicalRecords.OrderByDescending(x => x.RecordDate))
+                    {
+                        <div class="border-bottom p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary me-2">@r.Type</span>
+                                    <strong>@r.ChiefComplaint</strong>
+                                    <div class="text-muted small mt-1">@r.RecordDate.ToString("dd MMM yyyy HH:mm") · @r.Doctor?.FullName</div>
+                                </div>
+                                <a asp-controller="MedicalRecord" asp-action="Details" asp-route-id="@r.Id" class="btn btn-sm btn-outline-secondary">View</a>
+                            </div>
+                            @if (r.TreatmentPlan != null)
+                            {
+                                <div class="mt-2 text-muted small">Plan: @r.TreatmentPlan</div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- REMINDERS TAB -->
+    <div class="tab-pane fade" id="reminders">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span>Reminders</span>
+                <a asp-controller="Reminder" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-outline-danger"><i class="fas fa-plus me-1"></i>Add Reminder</a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Reminders.Any())
+                {
+                    <div class="text-center py-4 text-muted">No reminders.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                    @foreach (var r in Model.Reminders.OrderBy(x => x.DueAt))
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">@r.Title</div>
+                                    <div class="text-muted small">@r.DueAt.ToString("dd MMM yyyy HH:mm") · @r.Type</div>
+                                </div>
+                                <span class="badge bg-@(r.Status == PalliativeCare.Models.ReminderStatus.Pending ? "warning" : "secondary") bg-opacity-15 text-dark">@r.Status</span>
+                            </div>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

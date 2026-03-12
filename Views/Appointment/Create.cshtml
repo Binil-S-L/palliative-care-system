@@ -1,0 +1,85 @@
+@model PalliativeCare.Models.Appointment
+@{ ViewData["Title"] = Model.Id == 0 ? "Schedule Appointment" : "Edit Appointment"; var isEdit = Model.Id != 0; }
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i></a>
+    <h5 class="mb-0 fw-bold">@ViewData["Title"]</h5>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+            @Html.AntiForgeryToken()
+            @if (isEdit) { <input type="hidden" asp-for="Id" /> }
+            <div asp-validation-summary="All" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+            <div class="card">
+                <div class="card-header"><i class="fas fa-calendar-plus me-2 text-primary"></i>Appointment Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PatientId" class="form-label fw-semibold small">Patient</label>
+                            <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients" required>
+                                <option value="">Select patient...</option>
+                            </select>
+                            <span asp-validation-for="PatientId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DoctorId" class="form-label fw-semibold small">Doctor / Staff</label>
+                            <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.Doctors" required>
+                                <option value="">Select doctor...</option>
+                            </select>
+                            <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="ScheduledAt" class="form-label fw-semibold small">Date & Time</label>
+                            <input asp-for="ScheduledAt" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="ScheduledAt" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="DurationMinutes" class="form-label fw-semibold small">Duration</label>
+                            <select asp-for="DurationMinutes" class="form-select">
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="45">45 minutes</option>
+                                <option value="60">1 hour</option>
+                                <option value="90">1.5 hours</option>
+                                <option value="120">2 hours</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Type" class="form-label fw-semibold small">Appointment Type</label>
+                            <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<PalliativeCare.Models.AppointmentType>()"></select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Purpose" class="form-label fw-semibold small">Purpose / Reason</label>
+                            <input asp-for="Purpose" class="form-control" placeholder="e.g. Pain management review, follow-up..." />
+                            <span asp-validation-for="Purpose" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Location" class="form-label fw-semibold small">Location (optional)</label>
+                            <input asp-for="Location" class="form-control" placeholder="Room/ward or address for home visit" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Status" class="form-label fw-semibold small">Status</label>
+                            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<PalliativeCare.Models.AppointmentStatus>()"></select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Notes" class="form-label fw-semibold small">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="col-12 d-flex gap-2 justify-content-end pt-2">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>@(isEdit ? "Save Changes" : "Schedule Appointment")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

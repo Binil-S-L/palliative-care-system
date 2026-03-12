@@ -1,0 +1,71 @@
+@model PalliativeCare.Models.MedicalRecord
+@{ ViewData["Title"] = "New Medical Record"; }
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i></a>
+    <h5 class="mb-0 fw-bold">New Medical Record</h5>
+</div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-file-medical me-2 text-success"></i>Record Details</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label asp-for="PatientId" class="form-label fw-semibold small">Patient</label>
+                            <select asp-for="PatientId" class="form-select" asp-items="ViewBag.Patients" required><option value="">Select...</option></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DoctorId" class="form-label fw-semibold small">Clinician</label>
+                            <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.Doctors" required><option value="">Select...</option></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Type" class="form-label fw-semibold small">Record Type</label>
+                            <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<PalliativeCare.Models.RecordType>()"></select>
+                        </div>
+                        <div class="col-md-9">
+                            <label asp-for="ChiefComplaint" class="form-label fw-semibold small">Chief Complaint</label>
+                            <input asp-for="ChiefComplaint" class="form-control" placeholder="Main presenting issue..." />
+                            <span asp-validation-for="ChiefComplaint" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="PainScore" class="form-label fw-semibold small">Pain Score (0-10)</label>
+                            <input asp-for="PainScore" class="form-control" type="number" min="0" max="10" placeholder="0–10" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="VitalSigns" class="form-label fw-semibold small">Vital Signs</label>
+                            <textarea asp-for="VitalSigns" class="form-control" rows="2" placeholder="BP, HR, Temp, O2 Sat, RR..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Assessment" class="form-label fw-semibold small">Clinical Assessment</label>
+                            <textarea asp-for="Assessment" class="form-control" rows="2" placeholder="Clinical findings and assessment..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="TreatmentPlan" class="form-label fw-semibold small">Treatment Plan</label>
+                            <textarea asp-for="TreatmentPlan" class="form-control" rows="2" placeholder="Treatment and management plan..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Medications" class="form-label fw-semibold small">Medications Prescribed</label>
+                            <textarea asp-for="Medications" class="form-control" rows="2" placeholder="Drug, dose, frequency..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="FollowUpNotes" class="form-label fw-semibold small">Follow-up Notes</label>
+                            <textarea asp-for="FollowUpNotes" class="form-control" rows="2" placeholder="Follow-up instructions and next steps..."></textarea>
+                        </div>
+                        <div class="col-12 d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save me-2"></i>Save Record</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

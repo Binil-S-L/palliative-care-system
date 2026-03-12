@@ -1,0 +1,137 @@
+@model PalliativeCare.Models.Patient
+@{ 
+    ViewData["Title"] = Model.Id == 0 ? "Register Patient" : "Edit Patient";
+    var isEdit = Model.Id != 0;
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="fas fa-arrow-left"></i></a>
+    <h5 class="mb-0 fw-bold">@ViewData["Title"]</h5>
+</div>
+
+<form asp-action="@(isEdit ? "Edit" : "Create")" method="post">
+    @Html.AntiForgeryToken()
+    @if (isEdit) { <input type="hidden" asp-for="Id" /> }
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+    <div class="row g-3">
+        <!-- Personal Info -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-user me-2 text-primary"></i>Personal Information</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="FirstName" class="form-label fw-semibold small"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="LastName" class="form-label fw-semibold small"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DateOfBirth" class="form-label fw-semibold small"></label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Gender" class="form-label fw-semibold small"></label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Phone" class="form-label fw-semibold small"></label>
+                            <input asp-for="Phone" class="form-control" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Email" class="form-label fw-semibold small"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                        </div>
+                        <div class="col-md-3">
+                            <label asp-for="Status" class="form-label fw-semibold small"></label>
+                            <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<PalliativeCare.Models.PatientStatus>()"></select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Address" class="form-label fw-semibold small"></label>
+                            <input asp-for="Address" class="form-control" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Info -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><i class="fas fa-stethoscope me-2 text-danger"></i>Medical Information</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Diagnosis" class="form-label fw-semibold small"></label>
+                            <input asp-for="Diagnosis" class="form-control" placeholder="e.g. Advanced COPD, Stage 4 Cancer..." />
+                            <span asp-validation-for="Diagnosis" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DoctorId" class="form-label fw-semibold small">Assigned Doctor</label>
+                            <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.Doctors">
+                                <option value="">— Unassigned —</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="AllergiesAndMedications" class="form-label fw-semibold small"></label>
+                            <textarea asp-for="AllergiesAndMedications" class="form-control" rows="2" placeholder="Known allergies and current medications..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Notes" class="form-label fw-semibold small"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Additional clinical notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="col-12">
+            <div class="card border-danger border-opacity-25">
+                <div class="card-header text-danger"><i class="fas fa-phone-alt me-2"></i>Emergency Contact</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContactName" class="form-label fw-semibold small"></label>
+                            <input asp-for="EmergencyContactName" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContactPhone" class="form-label fw-semibold small"></label>
+                            <input asp-for="EmergencyContactPhone" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EmergencyContactRelation" class="form-label fw-semibold small"></label>
+                            <select asp-for="EmergencyContactRelation" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Spouse</option><option>Parent</option><option>Child</option>
+                                <option>Sibling</option><option>Friend</option><option>Carer</option><option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2 justify-content-end">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>@(isEdit ? "Save Changes" : "Register Patient")
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

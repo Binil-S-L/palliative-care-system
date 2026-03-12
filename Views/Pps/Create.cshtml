@@ -1,0 +1,159 @@
+@model PalliativeCare.Models.PpsAssessment
+@{
+    ViewData["Title"] = "Record PPS Assessment";
+    var patient = ViewBag.Patient as PalliativeCare.Models.Patient;
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-action="PatientHistory" asp-route-patientId="@patient!.Id" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0 fw-bold">New PPS Assessment</h5>
+        <small class="text-muted">Patient: @patient.FullName</small>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="PatientId" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="fas fa-clipboard-check me-2 text-primary"></i>PPS Score</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Score" class="form-label fw-semibold small">PPS Score (%)</label>
+                            <select asp-for="Score" class="form-select fw-bold" id="scoreSelect">
+                                @foreach (var s in new[] { 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0 })
+                                {
+                                    <option value="@s">@s%</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Score" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="DoctorId" class="form-label fw-semibold small">Assessed By</label>
+                            <select asp-for="DoctorId" class="form-select" asp-items="ViewBag.Doctors" required>
+                                <option value="">Select clinician...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div id="scoreLabel" class="alert mb-0 w-100 text-center fw-semibold" style="font-size:0.88rem"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="fas fa-stethoscope me-2 text-primary"></i>Domain Assessment</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Select the descriptor that best matches the patient's current status in each domain.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Ambulation" class="form-label fw-semibold small">Ambulation</label>
+                            <select asp-for="Ambulation" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Full</option>
+                                <option>Reduced</option>
+                                <option>Mainly sit/lie</option>
+                                <option>Totally bed bound</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Activity" class="form-label fw-semibold small">Activity & Evidence of Disease</label>
+                            <select asp-for="Activity" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Normal activity, no evidence of disease</option>
+                                <option>Normal activity, some evidence of disease</option>
+                                <option>Normal activity with effort</option>
+                                <option>Unable to do normal job/work</option>
+                                <option>Unable to do hobby/housework</option>
+                                <option>Unable to do any work</option>
+                                <option>Unable to do most activity</option>
+                                <option>Unable to do any activity</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="SelfCare" class="form-label fw-semibold small">Self-Care</label>
+                            <select asp-for="SelfCare" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Full</option>
+                                <option>Occasional assistance necessary</option>
+                                <option>Considerable assistance required</option>
+                                <option>Mainly assistance by another</option>
+                                <option>Total care</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Intake" class="form-label fw-semibold small">Intake</label>
+                            <select asp-for="Intake" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Normal</option>
+                                <option>Normal or reduced</option>
+                                <option>Reduced</option>
+                                <option>Minimal to sips</option>
+                                <option>Mouth care only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Consciousness" class="form-label fw-semibold small">Consciousness Level</label>
+                            <select asp-for="Consciousness" class="form-select">
+                                <option value="">Select...</option>
+                                <option>Full</option>
+                                <option>Full or confusion</option>
+                                <option>Drowsy +/- confusion</option>
+                                <option>Drowsy or coma +/- confusion</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="ClinicalNotes" class="form-label fw-semibold small">Clinical Notes</label>
+                            <textarea asp-for="ClinicalNotes" class="form-control" rows="3"
+                                placeholder="Any relevant observations or context for this assessment..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+                <a asp-action="PatientHistory" asp-route-patientId="@patient.Id" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save PPS Assessment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+const labels = {
+    100: {text:'Full — Normal activity, no disease evidence', cls:'alert-success'},
+    90:  {text:'Full — Normal activity, some disease evidence', cls:'alert-success'},
+    80:  {text:'Full — Normal activity with effort', cls:'alert-success'},
+    70:  {text:'Reduced — Unable to do normal job/work', cls:'alert-warning'},
+    60:  {text:'Reduced — Unable to do hobby/housework', cls:'alert-warning'},
+    50:  {text:'Mainly sit/lie — Unable to do any work', cls:'alert-warning'},
+    40:  {text:'Mainly in bed — Unable to do most activity', cls:'alert-danger'},
+    30:  {text:'Bed bound — Unable to do any activity', cls:'alert-danger'},
+    20:  {text:'Bed bound — Minimal activity', cls:'alert-dark'},
+    10:  {text:'Bed bound — Drowsy or coma', cls:'alert-dark'},
+    0:   {text:'Death', cls:'alert-dark'},
+};
+
+function updateLabel() {
+    const score = parseInt(document.getElementById('scoreSelect').value);
+    const el    = document.getElementById('scoreLabel');
+    const info  = labels[score];
+    el.className = 'alert mb-0 w-100 text-center fw-semibold ' + info.cls;
+    el.textContent = info.text;
+}
+
+document.getElementById('scoreSelect').addEventListener('change', updateLabel);
+updateLabel();
+</script>
+}

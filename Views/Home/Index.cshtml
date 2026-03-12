@@ -1,0 +1,207 @@
+@model PalliativeCare.Services.DashboardStats
+@{ ViewData["Title"] = "Dashboard"; }
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-user-injured"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold text-primary">@Model.TotalPatients</div>
+                    <div class="text-muted small">Total Patients</div>
+                    <div class="text-success small"><i class="fas fa-circle me-1" style="font-size:0.5rem"></i>@Model.ActivePatients active</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color:#8e44ad">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon text-white" style="background:#8e44ad22"><i class="fas fa-user-md" style="color:#8e44ad"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold" style="color:#8e44ad">@Model.TotalDoctors</div>
+                    <div class="text-muted small">Doctors & Staff</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color:#e67e22">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon" style="background:#e67e2222"><i class="fas fa-calendar-check" style="color:#e67e22"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold" style="color:#e67e22">@Model.AppointmentsToday</div>
+                    <div class="text-muted small">Appointments Today</div>
+                    <div class="text-muted small">@Model.AppointmentsThisWeek this week</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card h-100" style="border-left-color:#e74c3c">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon" style="background:#e74c3c22"><i class="fas fa-bell" style="color:#e74c3c"></i></div>
+                <div>
+                    <div class="fs-3 fw-bold" style="color:#e74c3c">@Model.PendingReminders</div>
+                    <div class="text-muted small">Pending Reminders</div>
+                    <a asp-controller="Reminder" asp-action="Index" class="small text-danger">View all →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Today's Appointments -->
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-day me-2 text-primary"></i>Today's Appointments</span>
+                <a asp-controller="Appointment" asp-action="Create" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i>Schedule
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.TodayAppointments.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-calendar-check fa-2x mb-2 d-block opacity-25"></i>
+                        No appointments today
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Time</th><th>Patient</th><th>Doctor</th><th>Type</th><th>Status</th></tr></thead>
+                            <tbody>
+                            @foreach (var a in Model.TodayAppointments)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@a.ScheduledAt.ToString("HH:mm")</td>
+                                    <td>
+                                        <a asp-controller="Patient" asp-action="Details" asp-route-id="@a.PatientId" class="text-decoration-none fw-semibold">
+                                            @a.Patient?.FullName
+                                        </a>
+                                    </td>
+                                    <td class="text-muted small">@a.Doctor?.FullName</td>
+                                    <td><span class="badge bg-info bg-opacity-15 text-info">@a.Type</span></td>
+                                    <td>
+                                        @{
+                                            var sc = a.Status switch {
+                                                PalliativeCare.Models.AppointmentStatus.Scheduled  => "bg-warning",
+                                                PalliativeCare.Models.AppointmentStatus.Confirmed  => "bg-success",
+                                                PalliativeCare.Models.AppointmentStatus.Completed  => "bg-secondary",
+                                                PalliativeCare.Models.AppointmentStatus.Cancelled  => "bg-danger",
+                                                _ => "bg-dark"
+                                            };
+                                        }
+                                        <span class="badge @sc bg-opacity-15 text-dark">@a.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Reminders -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bell me-2 text-danger"></i>Upcoming Reminders</span>
+                <a asp-controller="Reminder" asp-action="Create" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-plus me-1"></i>New
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.UpcomingReminders.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-bell-slash fa-2x mb-2 d-block opacity-25"></i>No pending reminders
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                    @foreach (var r in Model.UpcomingReminders)
+                    {
+                        var isOverdue = r.DueAt < DateTime.Now;
+                        <li class="list-group-item d-flex gap-3 align-items-start @(isOverdue ? "bg-danger bg-opacity-5" : "")">
+                            <div class="mt-1">
+                                <i class="fas fa-@(r.Type == PalliativeCare.Models.ReminderType.Appointment ? "calendar" : r.Type == PalliativeCare.Models.ReminderType.Medication ? "pills" : "bell") text-@(isOverdue ? "danger" : "primary")"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">@r.Title</div>
+                                <div class="text-muted" style="font-size:0.8rem">@r.Patient?.FullName</div>
+                                <div class="@(isOverdue ? "text-danger" : "text-muted")" style="font-size:0.78rem">
+                                    <i class="fas fa-clock me-1"></i>@r.DueAt.ToString("dd MMM HH:mm")
+                                    @if (isOverdue) { <span class="badge bg-danger ms-1" style="font-size:0.65rem">Overdue</span> }
+                                </div>
+                            </div>
+                            <form asp-controller="Reminder" asp-action="Dismiss" asp-route-id="@r.Id" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-link text-muted p-0" title="Dismiss">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Status Chart -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-pie me-2 text-primary"></i>Patient Status Breakdown</div>
+            <div class="card-body">
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Type Chart -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-bar me-2 text-primary"></i>Appointments by Type</div>
+            <div class="card-body">
+                <canvas id="typeChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const palette = ['#1a5276','#1abc9c','#e67e22','#e74c3c','#8e44ad','#2980b9'];
+
+// Patient Status Chart
+const statusData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PatientsByStatus));
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(statusData),
+        datasets: [{ data: Object.values(statusData), backgroundColor: palette, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { plugins: { legend: { position: 'right' } }, cutout: '65%' }
+});
+
+// Appointment Type Chart
+const typeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AppointmentsByType));
+new Chart(document.getElementById('typeChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(typeData),
+        datasets: [{ label: 'Appointments', data: Object.values(typeData), backgroundColor: palette, borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+}

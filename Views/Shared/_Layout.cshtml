@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Palliative Care System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #1a5276;
+            --primary-light: #2980b9;
+            --accent: #1abc9c;
+            --sidebar-w: 260px;
+            --bg: #f4f6f9;
+        }
+
+        body { background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-w); min-height: 100vh; background: var(--primary);
+            position: fixed; top: 0; left: 0; z-index: 1000;
+            display: flex; flex-direction: column;
+        }
+        .sidebar-brand {
+            padding: 20px; background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-brand h5 { color: #fff; margin: 0; font-size: 1rem; font-weight: 700; }
+        .sidebar-brand small { color: rgba(255,255,255,0.6); font-size: 0.75rem; }
+        .sidebar nav a {
+            display: flex; align-items: center; gap: 12px;
+            color: rgba(255,255,255,0.75); padding: 12px 20px;
+            text-decoration: none; font-size: 0.9rem;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            color: #fff; background: rgba(255,255,255,0.1);
+            border-left-color: var(--accent);
+        }
+        .sidebar nav a i { width: 20px; text-align: center; }
+        .sidebar-section {
+            padding: 8px 20px 4px;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.4); text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        /* Main content */
+        .main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
+        .topbar {
+            background: #fff; border-bottom: 1px solid #e0e0e0;
+            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .topbar h6 { margin: 0; color: #555; font-size: 0.95rem; }
+        .page-body { padding: 24px; }
+
+        /* Cards */
+        .card { border: none; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; font-weight: 600; }
+        .stat-card { border-left: 4px solid var(--accent); }
+        .stat-card .icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+
+        /* Badges */
+        .badge-active    { background: #d4edda; color: #155724; }
+        .badge-inactive  { background: #fff3cd; color: #856404; }
+        .badge-discharged{ background: #cce5ff; color: #004085; }
+        .badge-deceased  { background: #f8d7da; color: #721c24; }
+
+        /* Alerts */
+        .alert { border-radius: 8px; border: none; }
+
+        /* Table */
+        .table { font-size: 0.9rem; }
+        .table thead th { background: #f8f9fa; border-top: none; font-weight: 600; color: #555; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .table tbody tr:hover { background: #f8f9fa; }
+
+        /* Buttons */
+        .btn { border-radius: 6px; font-size: 0.875rem; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-light); border-color: var(--primary-light); }
+        .reminder-badge { position: absolute; top: 8px; right: 8px; font-size: 0.65rem; }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <h5><i class="fas fa-heartbeat me-2 text-danger"></i>PalliativeCare</h5>
+        <small>Patient Management System</small>
+    </div>
+    <nav class="flex-grow-1 py-2">
+        <div class="sidebar-section">Main</div>
+        <a asp-controller="Home" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </a>
+
+        <div class="sidebar-section">Patients</div>
+        <a asp-controller="Patient" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Patient" ? "active" : "")">
+            <i class="fas fa-user-injured"></i> All Patients
+        </a>
+        <a asp-controller="Patient" asp-action="Create">
+            <i class="fas fa-user-plus"></i> Register Patient
+        </a>
+
+        <div class="sidebar-section">Appointments</div>
+        <a asp-controller="Appointment" asp-action="Today" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Today" ? "active" : "")">
+            <i class="fas fa-calendar-day"></i> Today
+        </a>
+        <a asp-controller="Appointment" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Appointment" ? "active" : "")">
+            <i class="fas fa-calendar-alt"></i> All Appointments
+        </a>
+        <a asp-controller="Appointment" asp-action="Create">
+            <i class="fas fa-calendar-plus"></i> Schedule
+        </a>
+
+        <div class="sidebar-section">Medical</div>
+        <a asp-controller="MedicalRecord" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "MedicalRecord" ? "active" : "")">
+            <i class="fas fa-file-medical"></i> Medical Records
+        </a>
+        <a asp-controller="MedicalRecord" asp-action="Create">
+            <i class="fas fa-notes-medical"></i> New Record
+        </a>
+
+        <div class="sidebar-section">Team</div>
+        <a asp-controller="Doctor" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Doctor" ? "active" : "")">
+            <i class="fas fa-user-md"></i> Doctors & Staff
+        </a>
+        <a asp-controller="Doctor" asp-action="Create">
+            <i class="fas fa-user-plus"></i> Add Staff
+        </a>
+
+        <div class="sidebar-section">Clinical Tools</div>
+        <a asp-controller="Pps" asp-action="PatientHistory" asp-route-patientId="1" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Pps" ? "active" : "")">
+            <i class="fas fa-chart-line"></i> PPS Tracker
+        </a>
+
+        <div class="sidebar-section">Alerts</div>
+        <a asp-controller="Reminder" asp-action="Index" class="position-relative @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reminder" ? "active" : "")">
+            <i class="fas fa-bell"></i> Reminders
+        </a>
+    </nav>
+    <div class="p-3 border-top" style="border-color: rgba(255,255,255,0.1)!important">
+        <small class="text-white-50">&copy; @DateTime.Now.Year Palliative Care System</small>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+    <div class="topbar">
+        <h6>@ViewData["Title"]</h6>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</span>
+            <partial name="_LoginPartial" />
+        </div>
+    </div>
+
+    <div class="page-body">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @RenderBody()
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

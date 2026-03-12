@@ -1,0 +1,207 @@
+@{
+    ViewData["Title"] = ViewData["Title"]?.ToString();
+    var patient  = ViewBag.Patient as PalliativeCare.Models.Patient;
+    var family   = ViewBag.Family  as IEnumerable<PalliativeCare.Models.FamilyMember> ?? Enumerable.Empty<PalliativeCare.Models.FamilyMember>();
+    var updates  = ViewBag.Updates  as IEnumerable<PalliativeCare.Models.CareUpdate>  ?? Enumerable.Empty<PalliativeCare.Models.CareUpdate>();
+    var messages = ViewBag.Messages as IEnumerable<PalliativeCare.Models.FamilyMessage> ?? Enumerable.Empty<PalliativeCare.Models.FamilyMessage>();
+    int unread   = ViewBag.Unread ?? 0;
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-controller="Patient" asp-action="Details" asp-route-id="@patient!.Id" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0 fw-bold">Family Portal — @patient.FullName</h5>
+        <small class="text-muted">Manage family access, post updates, and respond to messages</small>
+    </div>
+    <a asp-action="AddMember" asp-route-patientId="@patient.Id" class="btn btn-primary ms-auto">
+        <i class="fas fa-user-plus me-1"></i>Add Family / Carer
+    </a>
+</div>
+
+@if (unread > 0)
+{
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+        <i class="fas fa-envelope fa-lg"></i>
+        <strong>@unread unread message@(unread > 1 ? "s" : "")</strong> from family — scroll down to respond.
+    </div>
+}
+
+<div class="row g-3">
+    @* ── Family Members ──────────────────────────────────────────────────── *@
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-users me-2 text-primary"></i>Family & Carers (@family.Count())</div>
+            <div class="card-body p-0">
+                @if (!family.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-users fa-2x d-block mb-2 opacity-25"></i>
+                        No family members added yet.
+                    </div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                    @foreach (var m in family)
+                    {
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">@m.FullName</div>
+                                    <div class="text-muted small">@m.Relationship · @m.Phone</div>
+                                    <div class="text-muted small">@m.Email</div>
+                                    <div class="mt-1">
+                                        @if (m.IsApproved)
+                                        {
+                                            <span class="badge bg-success bg-opacity-15 text-success" style="font-size:0.72rem">
+                                                <i class="fas fa-check me-1"></i>Portal Access Approved
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-15 text-warning" style="font-size:0.72rem">
+                                                <i class="fas fa-clock me-1"></i>Pending Approval
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column gap-1">
+                                    @if (!m.IsApproved)
+                                    {
+                                        <form asp-action="Approve" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@m.Id" />
+                                            <input type="hidden" name="patientId" value="@patient.Id" />
+                                            <button type="submit" class="btn btn-xs btn-outline-success" style="font-size:0.78rem;padding:2px 8px">Approve</button>
+                                        </form>
+                                    }
+                                    @if (m.IsApproved)
+                                    {
+                                        <a asp-action="Portal" asp-route-patientId="@patient.Id" asp-route-familyMemberId="@m.Id"
+                                           class="btn btn-xs btn-outline-primary" style="font-size:0.78rem;padding:2px 8px" target="_blank">
+                                           View Portal
+                                        </a>
+                                    }
+                                    <form asp-action="Remove" method="post" onsubmit="return confirm('Remove this family member?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@m.Id" />
+                                        <input type="hidden" name="patientId" value="@patient.Id" />
+                                        <button type="submit" class="btn btn-xs btn-outline-danger" style="font-size:0.78rem;padding:2px 8px">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ── Post Care Update ────────────────────────────────────────────────── *@
+    <div class="col-md-7">
+        <div class="card mb-3">
+            <div class="card-header"><i class="fas fa-bullhorn me-2 text-success"></i>Post Care Update</div>
+            <div class="card-body">
+                <form asp-action="PostUpdate" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="patientId" value="@patient.Id" />
+                    <div class="mb-2">
+                        <input type="text" name="title" class="form-control" placeholder="Update title e.g. 'Week 3 Progress'" required />
+                    </div>
+                    <div class="mb-2">
+                        <textarea name="body" class="form-control" rows="3"
+                            placeholder="Write a message for the family. Keep it compassionate and clear..." required></textarea>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center justify-content-between">
+                        <select name="visibility" class="form-select w-auto">
+                            <option value="Family">Visible to Family</option>
+                            <option value="StaffOnly">Staff Only (internal)</option>
+                        </select>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-1"></i>Post Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @* ── Recent Updates ──────────────────────────────────────────────── *@
+        <div class="card">
+            <div class="card-header"><i class="fas fa-history me-2 text-primary"></i>Recent Updates</div>
+            <div class="card-body p-0" style="max-height:200px;overflow-y:auto">
+                @if (!updates.Any())
+                {
+                    <div class="text-center py-3 text-muted small">No updates posted yet.</div>
+                }
+                @foreach (var u in updates.Take(5))
+                {
+                    <div class="border-bottom p-3">
+                        <div class="d-flex justify-content-between">
+                            <strong class="small">@u.Title</strong>
+                            <span class="badge bg-@(u.Visibility == PalliativeCare.Models.UpdateVisibility.Family ? "success" : "secondary") bg-opacity-10 text-dark" style="font-size:0.68rem">@u.Visibility</span>
+                        </div>
+                        <div class="text-muted small">@u.PostedAt.ToString("dd MMM yyyy HH:mm") · @u.Doctor?.FullName</div>
+                        <div class="small mt-1">@u.Body</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ── Message Thread ──────────────────────────────────────────────────── *@
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-comments text-primary"></i>
+                <span>Messages with Family</span>
+                @if (unread > 0) { <span class="badge bg-danger">@unread new</span> }
+            </div>
+            <div class="card-body">
+                @* Message thread *@
+                <div class="d-flex flex-column gap-2 mb-3" style="max-height:320px;overflow-y:auto" id="messageThread">
+                    @if (!messages.Any())
+                    {
+                        <div class="text-center text-muted py-3">No messages yet.</div>
+                    }
+                    @foreach (var msg in messages)
+                    {
+                        var isTeam = msg.Direction == PalliativeCare.Models.MessageDirection.TeamToFamily;
+                        <div class="d-flex @(isTeam ? "justify-content-end" : "justify-content-start")">
+                            <div class="p-3 rounded-3 @(isTeam ? "bg-primary text-white" : "bg-light")"
+                                 style="max-width:75%;font-size:0.88rem">
+                                <div class="fw-semibold mb-1" style="font-size:0.78rem;opacity:0.8">
+                                    @if (isTeam) { @(msg.Doctor?.FullName ?? "Care Team") }
+                                    else { @(msg.FamilyMember?.FullName ?? "Family") }
+                                    · @msg.SentAt.ToString("dd MMM HH:mm")
+                                    @if (!msg.IsRead && !isTeam) { <span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem">Unread</span> }
+                                </div>
+                                @msg.Body
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @* Reply box *@
+                <form asp-action="Reply" method="post" class="d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="patientId" value="@patient.Id" />
+                    <textarea name="body" class="form-control" rows="2" placeholder="Reply to family..." required></textarea>
+                    <button type="submit" class="btn btn-primary align-self-end px-4">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Auto-scroll message thread to bottom
+    const thread = document.getElementById('messageThread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+</script>
+}

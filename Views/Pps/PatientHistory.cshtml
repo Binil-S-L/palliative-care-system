@@ -1,0 +1,219 @@
+@model IEnumerable<PalliativeCare.Models.PpsAssessment>
+@{
+    ViewData["Title"] = ViewData["Title"]?.ToString();
+    var patient = ViewBag.Patient as PalliativeCare.Models.Patient;
+    var alert   = ViewBag.Alert as PalliativeCare.Services.PpsDeclineAlert;
+    var list    = Model.ToList();
+    var latest  = list.FirstOrDefault();
+}
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <a asp-controller="Patient" asp-action="Details" asp-route-id="@patient!.Id" class="btn btn-sm btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0 fw-bold">Palliative Performance Scale — @patient.FullName</h5>
+        <small class="text-muted">@list.Count assessment(s) recorded</small>
+    </div>
+    <a asp-action="Create" asp-route-patientId="@patient.Id" class="btn btn-primary ms-auto">
+        <i class="fas fa-plus me-1"></i>Record Assessment
+    </a>
+</div>
+
+@* ── Decline Alert ──────────────────────────────────────────────────────── *@
+@if (alert != null)
+{
+    <div class="alert @(alert.IsCritical ? "alert-danger" : "alert-warning") d-flex align-items-center gap-3 mb-3">
+        <i class="fas fa-@(alert.IsCritical ? "exclamation-triangle" : "arrow-down") fa-2x"></i>
+        <div>
+            <strong>@(alert.IsCritical ? "Significant PPS Decline" : "PPS Decline Noted")</strong>
+            <div>Score dropped <strong>@alert.Drop points</strong> — from @alert.PreviousScore% to @alert.CurrentScore%
+            since @alert.Since.ToString("dd MMM yyyy"). @(alert.IsCritical ? "Urgent clinical review recommended." : "Monitor closely.")</div>
+        </div>
+    </div>
+}
+
+<div class="row g-3 mb-3">
+    @* ── Current Score Card ─────────────────────────────────────────────── *@
+    @if (latest != null)
+    {
+        <div class="col-md-4">
+            <div class="card h-100 border-@latest.RiskColour border-opacity-50">
+                <div class="card-body text-center py-4">
+                    <div class="display-3 fw-bold text-@latest.RiskColour">@latest.Score<span class="fs-4">%</span></div>
+                    <div class="badge bg-@latest.RiskColour bg-opacity-15 text-@latest.RiskColour fs-6 px-3 py-2 mb-2">
+                        @latest.RiskCategory
+                    </div>
+                    <div class="text-muted small mt-2">@latest.ScoreLabel</div>
+                    <hr />
+                    <div class="text-muted small">
+                        Last assessed: @latest.AssessedAt.ToString("dd MMM yyyy")<br />
+                        by @latest.Doctor?.FullName
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Trend Chart ────────────────────────────────────────────────────── *@
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-chart-line me-2 text-primary"></i>PPS Trend Over Time</div>
+            <div class="card-body">
+                @if (list.Count < 2)
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-chart-line fa-2x d-block mb-2 opacity-25"></i>
+                        Record at least 2 assessments to see the trend chart.
+                    </div>
+                }
+                else
+                {
+                    <canvas id="ppsTrendChart" height="180"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ── PPS Scale Reference ─────────────────────────────────────────────────── *@
+<div class="row g-3 mb-3">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-info-circle me-2 text-primary"></i>PPS Scale Reference</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0" style="font-size:0.82rem">
+                    <thead><tr><th>Score</th><th>Category</th><th>Description</th></tr></thead>
+                    <tbody>
+                    @foreach (var (score, cat, col, desc) in new[] {
+                        (100,"Stable","success","Full — Normal activity, no disease evidence"),
+                        (90, "Stable","success","Full — Normal activity, some disease evidence"),
+                        (80, "Stable","success","Full — Normal activity with effort"),
+                        (70, "Transitional","warning","Reduced — Unable to do normal job/work"),
+                        (60, "Transitional","warning","Reduced — Unable to do hobby/housework"),
+                        (50, "Transitional","warning","Mainly sit/lie — Unable to do any work"),
+                        (40, "Declining","danger","Mainly in bed — Unable to do most activity"),
+                        (30, "Declining","danger","Totally bed bound — Unable to do any activity"),
+                        (20, "Terminal","dark","Totally bed bound — Minimal activity"),
+                        (10, "Terminal","dark","Totally bed bound — Drowsy or coma"),
+                        (0,  "Deceased","dark","Death"),
+                    })
+                    {
+                        <tr>
+                            <td class="fw-bold text-@col">@score%</td>
+                            <td><span class="badge bg-@col bg-opacity-10 text-@col" style="font-size:0.7rem">@cat</span></td>
+                            <td class="text-muted">@desc</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ── Assessment History Table ─────────────────────────────────────────── *@
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-history me-2 text-primary"></i>Assessment History</div>
+            <div class="card-body p-0">
+                @if (!list.Any())
+                {
+                    <div class="text-center py-4 text-muted">No assessments recorded yet.</div>
+                }
+                else
+                {
+                    <table class="table table-hover align-middle mb-0" style="font-size:0.88rem">
+                        <thead><tr><th>Date</th><th>Score</th><th>Category</th><th>Change</th><th>Clinician</th></tr></thead>
+                        <tbody>
+                        @for (int i = 0; i < list.Count; i++)
+                        {
+                            var a    = list[i];
+                            var prev = i < list.Count - 1 ? list[i + 1] : null;
+                            var change = prev != null ? a.Score - prev.Score : (int?)null;
+                            <tr>
+                                <td>@a.AssessedAt.ToString("dd MMM yyyy")</td>
+                                <td><span class="badge bg-@a.RiskColour bg-opacity-15 text-@a.RiskColour fw-bold">@a.Score%</span></td>
+                                <td><span class="badge bg-@a.RiskColour bg-opacity-10 text-@a.RiskColour" style="font-size:0.72rem">@a.RiskCategory</span></td>
+                                <td>
+                                    @if (change.HasValue)
+                                    {
+                                        var arrow = change > 0 ? "▲" : change < 0 ? "▼" : "—";
+                                        var col2  = change < 0 ? "danger" : change > 0 ? "success" : "muted";
+                                        <span class="text-@col2 fw-semibold">@arrow @Math.Abs(change.Value)</span>
+                                    }
+                                    else { <span class="text-muted">—</span> }
+                                </td>
+                                <td class="text-muted small">@a.Doctor?.FullName</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+@if (list.Count >= 2)
+{
+    var chartData = list.OrderBy(a => a.AssessedAt).ToList();
+    var labels    = chartData.Select(a => a.AssessedAt.ToString("dd MMM yy")).ToList();
+    var scores    = chartData.Select(a => a.Score).ToList();
+    <script>
+    const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(labels));
+    const scores = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(scores));
+
+    // Colour each point by risk category
+    const pointColors = scores.map(s =>
+        s >= 70 ? '#1abc9c' : s >= 50 ? '#f39c12' : s >= 30 ? '#e74c3c' : '#2c3e50'
+    );
+
+    new Chart(document.getElementById('ppsTrendChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'PPS Score (%)',
+                data: scores,
+                borderColor: '#1a5276',
+                backgroundColor: 'rgba(26,82,118,0.08)',
+                pointBackgroundColor: pointColors,
+                pointRadius: 7,
+                pointHoverRadius: 9,
+                tension: 0.35,
+                fill: true,
+                borderWidth: 2.5,
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    min: 0, max: 100,
+                    title: { display: true, text: 'PPS Score (%)' },
+                    ticks: {
+                        callback: v => v + '%',
+                        stepSize: 10,
+                    },
+                    // Danger zone background via annotation workaround
+                    grid: { color: ctx => ctx.tick.value <= 30 ? 'rgba(231,76,60,0.08)' : '#e9ecef' }
+                },
+                x: { title: { display: true, text: 'Assessment Date' } }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: ctx => {
+                            const s = ctx.parsed.y;
+                            return s >= 70 ? 'Category: Stable' : s >= 50 ? 'Category: Transitional' : s >= 30 ? 'Category: Declining' : 'Category: Terminal';
+                        }
+                    }
+                },
+                legend: { display: false }
+            }
+        }
+    });
+    </script>
+}
+}
